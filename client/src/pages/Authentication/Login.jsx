@@ -1,19 +1,38 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import bgImg from '../../assets/images/login.jpg'
 import logo from '../../assets/images/logo.png'
-import { useContext } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { AuthContext } from '../../providers/AuthProvider'
 import toast from 'react-hot-toast'
+import axios from 'axios'
 const Login = () => {
   const navigate = useNavigate()
-  const { signIn, signInWithGoogle } = useContext(AuthContext)
-
+  const location = useLocation()
+  const { signIn, signInWithGoogle, user, loading } = useContext(AuthContext)
+  useEffect(() => {
+    if (user) {
+      navigate('/')
+    }
+  }, [navigate, user])
+  const from = location.state || '/'
   // Google Signin
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle()
+      // 1. google sign in from firebase
+      const result = await signInWithGoogle()
+      console.log(result.user)
+
+      //2. get token from server using email
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_API_URL}/jwt`,
+        {
+          email: result?.user?.email,
+        },
+        { withCredentials: true }
+      )
+      console.log(data)
       toast.success('Signin Successful')
-      navigate('/')
+      navigate(from, { replace: true })
     } catch (err) {
       console.log(err)
       toast.error(err?.message)
@@ -30,15 +49,23 @@ const Login = () => {
     try {
       //User Login
       const result = await signIn(email, pass)
-      console.log(result)
-      navigate('/')
+      console.log(result.user)
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_API_URL}/jwt`,
+        {
+          email: result?.user?.email,
+        },
+        { withCredentials: true }
+      )
+      console.log(data)
+      navigate(from, { replace: true })
       toast.success('Signin Successful')
     } catch (err) {
       console.log(err)
       toast.error(err?.message)
     }
   }
-
+  if (user || loading) return
   return (
     <div className='flex justify-center items-center min-h-[calc(100vh-306px)] my-12'>
       <div className='flex w-full max-w-sm mx-auto overflow-hidden bg-white rounded-lg shadow-lg  lg:max-w-4xl '>

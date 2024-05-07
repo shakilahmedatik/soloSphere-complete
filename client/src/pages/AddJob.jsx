@@ -1,13 +1,14 @@
-import { useContext, useState } from 'react'
+import { useState } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { AuthContext } from '../providers/AuthProvider'
+
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import axios from 'axios'
+import useAuth from '../hooks/useAuth'
 
 const AddJob = () => {
-  const { user } = useContext(AuthContext)
+  const { user } = useAuth()
   const navigate = useNavigate()
 
   const [startDate, setStartDate] = useState(new Date())
@@ -34,6 +35,7 @@ const AddJob = () => {
         name: user?.displayName,
         photo: user?.photoURL,
       },
+      bid_count: 0,
     }
     try {
       const { data } = await axios.post(
